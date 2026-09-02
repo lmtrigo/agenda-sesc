@@ -1,117 +1,51 @@
-name: Atualizar programação
+name: Redirecionar para o endereço novo
 
-# Roda de madrugada (05:10 no horário de Brasília = 08:10 UTC) e também sob
-# demanda, pelo botão "Run workflow" na aba Actions.
+# Este repositório aposentou-se. O app mudou para
+# https://acontece-no-sesc.github.io/ e aqui só fica uma página que leva
+# até lá, preservando o caminho de quem tinha um link salvo.
+#
+# O robô de coleta saiu daqui de propósito: ele rodava toda madrugada e
+# republicava um site inteiro, o que sobrescreveria o redirecionamento no dia
+# seguinte — e ainda deixaria duas cópias do mesmo app no ar, coletando o
+# mesmo portal duas vezes.
+#
+# Só roda quando alguém aperta o botão: assim o site antigo continua de pé
+# até a hora que você decidir virar a chave.
+
 on:
-  schedule:
-    - cron: "10 8 * * *"
   workflow_dispatch:
-    inputs:
-      dias:
-        description: "Janela em dias a coletar"
-        default: "60"
-      descricoes:
-        description: "Buscar descrições de todos os eventos (mais lento)"
-        type: boolean
-        default: true
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
 concurrency:
-  group: atualizar
+  group: pages
   cancel-in-progress: false
 
 jobs:
-  coletar:
+  montar:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Coletar a listagem
-        run: python coletor.py --dias "${{ inputs.dias || '60' }}"
-
-      - name: Enriquecer com bilheteria, preços, inscrições e descrições
+      - name: Montar a página
         run: |
-          if [ "${{ inputs.descricoes }}" = "false" ]; then
-            python detalhes.py --html-cats "Turismo Social" "Cursos e Oficinas"
-          else
-            python detalhes.py --html
-          fi
+          mkdir -p site
+          cp redirecionamento.html site/index.html
+          # O mesmo arquivo como 404: é ele que atende QUALQUER caminho antigo
+          # (/dados/ics/123.ics, /programacao, o que for) e é lá que o script
+          # recorta o prefixo e recola o resto no endereço novo.
+          cp redirecionamento.html site/404.html
+          touch site/.nojekyll
 
-      - name: Reprocessar datas e intervalos de viagem
-        run: python reparse.py --mostrar 0
-
-      # O coletor já grava as fotos; o que só o extras traz é o endereço das
-      # 43 unidades, raspado da página de cada uma. Sem ele o .ics sai sem
-      # local nas 9 unidades que não vendem ingresso.
-      - name: Endereços das unidades
-        run: python extras.py
-
-      - name: Montar o arquivo único e o site
-        env:
-          # Preencha para usar domínio próprio (ex.: agenda.exemplo.com.br).
-          # Vazio = endereço do github.io.
-          DOMINIO: ""
-        run: |
-          python embutir.py --com-descricao
-          # O Pages serve na RAIZ quando o repositório se chama
-          # <dono>.github.io, e também quando há domínio próprio; nos demais
-          # casos serve numa subpasta com o nome do repositório. Passar a
-          # subpasta errada quebra todos os caminhos do site de uma vez.
-          repo="${GITHUB_REPOSITORY#*/}"
-          dono="${GITHUB_REPOSITORY_OWNER}"
-          if [ -n "$DOMINIO" ] || [ "${repo,,}" = "${dono,,}.github.io" ]; then
-            base="/"
-          else
-            base="/$repo/"
-          fi
-          python publicar.py --base "$base"
-          # O Pages só assume o domínio próprio se este arquivo estiver na
-          # saída publicada — e o web/ é refeito do zero a cada rodada.
-          if [ -n "$DOMINIO" ]; then echo "$DOMINIO" > web/CNAME; fi
-
-      # Publicar vem ANTES de guardar no git. O site sai do artefato abaixo;
-      # o commit é só contabilidade, e não pode derrubar uma hora de coleta.
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: web
-
-      - name: Guardar os dados no repositório
-        # Um re-run parte do commit original, e a main pode ter andado desde
-        # então — foi assim que o push falhou e levou o job junto. Aqui os
-        # dois arquivos gerados são reaplicados sobre a main mais recente, o
-        # que também evita conflito: a saída do robô sempre vence.
-        continue-on-error: true
-        run: |
-          git config user.name "robo da agenda"
-          git config user.email "actions@github.com"
-
-          tmp=$(mktemp -d)
-          cp dados/eventos.json prototipo.html "$tmp/"
-
-          git fetch origin main
-          git checkout -B main origin/main
-          cp "$tmp/eventos.json" dados/eventos.json
-          cp "$tmp/prototipo.html" prototipo.html
-
-          git add dados/eventos.json prototipo.html
-          if git diff --staged --quiet; then
-            echo "Nada mudou desde a última coleta."
-            exit 0
-          fi
-          git commit -m "dados: coleta de $(date -u +%d/%m/%Y)"
-          git push origin HEAD:main || echo "::warning::push recusado; o site foi publicado mesmo assim"
+          path: site
 
   publicar:
-    needs: coletar
+    needs: montar
     runs-on: ubuntu-latest
     environment:
       name: github-pages

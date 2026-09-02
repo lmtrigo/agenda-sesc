@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mudamos de endereço — Acontece no SESC</title>
+
+<!-- O destino. Uma linha só, de propósito: se o endereço mudar de novo,
+     é aqui que se troca, e o resto continua valendo. -->
+<link rel="canonical" href="https://acontece-no-sesc.github.io/">
+<meta http-equiv="refresh" content="3; url=https://acontece-no-sesc.github.io/">
+<meta name="robots" content="noindex, follow">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,800&display=swap">
+
+<style>
+  :root {
+    --paper: #FAF8F4; --surface: #FFFFFF; --line: #E2DCD1;
+    --ink: #16130E; --ink-2: #59533F; --ink-3: #8A8474;
+    --accent: #1B4D7A; --laranja: #C0521A;
+    --display: "Bricolage Grotesque", "Archivo", ui-sans-serif, system-ui, sans-serif;
+    --ui: "Archivo", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; background: var(--paper); color: var(--ink);
+    font-family: var(--ui); font-size: 16px; line-height: 1.6;
+    display: grid; place-items: center; padding: 24px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .cartao {
+    max-width: 460px; width: 100%; background: var(--surface);
+    border: 1px solid var(--line); border-radius: 20px; padding: 32px 28px;
+    box-shadow: 0 1px 2px rgba(22,19,14,.05), 0 20px 44px -30px rgba(22,19,14,.5);
+  }
+  .marca { display: flex; align-items: center; gap: 12px; margin-bottom: 26px; }
+  .marca b {
+    font-family: var(--display); font-weight: 800; font-size: 21px;
+    letter-spacing: -.025em; line-height: 1.05;
+  }
+  .marca span {
+    display: block; color: var(--ink-3); font-size: 10.5px;
+    letter-spacing: .1em; text-transform: uppercase; font-weight: 600;
+  }
+  h1 {
+    font-family: var(--display); font-weight: 800; font-size: 27px;
+    letter-spacing: -.028em; line-height: 1.12; margin: 0 0 12px; text-wrap: balance;
+  }
+  p { margin: 0 0 16px; color: var(--ink-2); }
+  p:last-of-type { margin-bottom: 24px; }
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 48px; padding: 12px 20px; border-radius: 999px;
+    background: var(--ink); color: var(--paper); text-decoration: none;
+    font-weight: 700; font-size: 15px;
+  }
+  .btn:hover { background: var(--laranja); }
+  .nota {
+    margin: 18px 0 0; font-size: 12.5px; color: var(--ink-3); line-height: 1.5;
+    text-align: center;
+  }
+  .nota code {
+    font-family: ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+    font-size: 12px; background: var(--paper); border-radius: 4px; padding: 1px 5px;
+  }
+  a { color: var(--accent); }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+  <main class="cartao">
+    <div class="marca">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="1" y="2" width="22" height="20" rx="4.5" fill="#16130E"/>
+        <rect x="4.6" y="6.6" width="3.4" height="1.7" rx=".85" fill="#FAF8F4"/>
+        <rect x="4.6" y="11.2" width="3.4" height="1.7" rx=".85" fill="#FAF8F4"/>
+        <rect x="4.6" y="15.8" width="3.4" height="1.7" rx=".85" fill="#FAF8F4"/>
+        <rect x="10.2" y="6" width="9.2" height="12" rx="2.2" fill="#C0521A"/>
+      </svg>
+      <div>
+        <b>Acontece no SESC</b>
+        <span>agregador não oficial</span>
+      </div>
+    </div>
+
+    <h1>Este endereço mudou</h1>
+    <p>A agenda continua de pé, com programação nova todo dia — só que em
+    outro lugar. Estamos te levando para lá.</p>
+
+    <a class="btn" id="ir" href="https://acontece-no-sesc.github.io/">
+      Ir para o novo endereço
+    </a>
+
+    <p class="nota">
+      Se preferir guardar: <code id="destino">acontece-no-sesc.github.io</code><br>
+      Agregador independente — não é um site oficial do Sesc.
+    </p>
+  </main>
+
+<script>
+  /* Redirecionamento que preserva o caminho.
+     O GitHub Pages serve esta mesma página como 404 do site antigo, então
+     alguém que tinha salvo /agenda-sesc/dados/ics/123.ics cai aqui. Levar
+     essa pessoa para a home seria perder o que ela veio buscar; o que se faz
+     é recortar o prefixo do site antigo e recolar o resto no novo.
+
+     O meta refresh acima é a rede de segurança para quem está sem
+     JavaScript: ele leva à home em três segundos, sempre. */
+  (function () {
+    var DESTINO = "https://acontece-no-sesc.github.io/";
+    var resto = "";
+    try {
+      // o prefixo é a primeira pasta do caminho: /agenda-sesc/...
+      var p = location.pathname.replace(/^\/[^/]*\//, "");
+      if (p && p !== "index.html") resto = p + location.search + location.hash;
+    } catch (e) {}
+
+    var alvo = DESTINO + resto;
+    var ir = document.getElementById("ir");
+    if (ir) ir.href = alvo;
+    if (resto) {
+      var d = document.getElementById("destino");
+      if (d) d.textContent = "acontece-no-sesc.github.io/" + resto;
+    }
+    // Um instante para a pessoa ver para onde está indo, e `replace` para o
+    // botão de voltar não devolvê-la ao endereço morto.
+    setTimeout(function () { location.replace(alvo); }, 1200);
+  })();
+</script>
+</body>
+</html>
