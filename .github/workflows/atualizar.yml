@@ -38,6 +38,17 @@ jobs:
           # (/dados/ics/123.ics, /programacao, o que for) e é lá que o script
           # recorta o prefixo e recola o resto no endereço novo.
           cp redirecionamento.html site/404.html
+
+          # O worker de despedida vai para o MESMO caminho do antigo
+          # (/agenda-sesc/sw.js). É a única coisa que o navegador busca
+          # sozinho num PWA já instalado: sem ele, quem instalou continua
+          # abrindo a casca em cache do app velho para sempre.
+          cp sw-despedida.js site/sw.js
+
+          # O manifest volta a existir só para o app instalado não ficar sem
+          # identidade enquanto o navegador não o descarta.
+          cp manifest-despedida.webmanifest site/manifest.webmanifest
+
           touch site/.nojekyll
 
       - uses: actions/upload-pages-artifact@v3

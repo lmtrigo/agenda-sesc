@@ -1,0 +1,11 @@
+{
+  "name": "Acontece no SESC — mudou de endereço",
+  "short_name": "Mudou",
+  "description": "Este endereço foi aposentado. O app agora está em acontece-no-sesc.github.io.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "browser",
+  "background_color": "#FAF8F4",
+  "theme_color": "#16130E",
+  "lang": "pt-BR"
+}

@@ -8,7 +8,10 @@
 <!-- O destino. Uma linha só, de propósito: se o endereço mudar de novo,
      é aqui que se troca, e o resto continua valendo. -->
 <link rel="canonical" href="https://acontece-no-sesc.github.io/">
-<meta http-equiv="refresh" content="3; url=https://acontece-no-sesc.github.io/">
+<!-- Rede de segurança para quem está sem JavaScript. O script abaixo cancela
+     este refresh quando detecta que a pessoa está no app instalado, onde sair
+     sozinho abriria o navegador por cima do app sem explicação. -->
+<meta http-equiv="refresh" content="4; url=https://acontece-no-sesc.github.io/" id="refresh">
 <meta name="robots" content="noindex, follow">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -85,9 +88,9 @@
       </div>
     </div>
 
-    <h1>Este endereço mudou</h1>
-    <p>A agenda continua de pé, com programação nova todo dia — só que em
-    outro lugar. Estamos te levando para lá.</p>
+    <h1 id="titulo">Este endereço mudou</h1>
+    <p id="texto">A agenda continua de pé, com programação nova todo dia — só que
+    em outro lugar. Estamos te levando para lá.</p>
 
     <a class="btn" id="ir" href="https://acontece-no-sesc.github.io/">
       Ir para o novo endereço
@@ -124,6 +127,33 @@
       var d = document.getElementById("destino");
       if (d) d.textContent = "acontece-no-sesc.github.io/" + resto;
     }
+    /* Quem chega pelo APP INSTALADO é outro caso, e o pior deles.
+       Um PWA está preso ao endereço em que foi instalado — não existe como
+       mudar o atalho da tela inicial de lugar. Levar essa pessoa embora
+       sozinho abriria o navegador por cima do app, sem explicar nada, e o
+       ícone antigo continuaria ali no dia seguinte fazendo a mesma coisa.
+       Melhor parar, dizer o que aconteceu e deixar ela instalar de novo. */
+    var instalado = false;
+    try {
+      instalado = window.matchMedia("(display-mode: standalone)").matches ||
+                  window.navigator.standalone === true;
+    } catch (e) {}
+
+    if (instalado) {
+      var t = document.getElementById("titulo");
+      var p2 = document.getElementById("texto");
+      if (t) t.textContent = "O app mudou de endereço";
+      if (p2) {
+        p2.textContent = "Este atalho aponta para o endereço antigo, e um app " +
+          "instalado não consegue mudar de lugar sozinho. Abra o novo, instale " +
+          "de novo pelo menu do navegador e apague este ícone.";
+      }
+      if (ir) ir.textContent = "Abrir o novo endereço";
+      var meta = document.getElementById("refresh");
+      if (meta) meta.parentNode.removeChild(meta);
+      return;                                   // sem redirecionamento automático
+    }
+
     // Um instante para a pessoa ver para onde está indo, e `replace` para o
     // botão de voltar não devolvê-la ao endereço morto.
     setTimeout(function () { location.replace(alvo); }, 1200);
